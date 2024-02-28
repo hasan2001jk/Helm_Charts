@@ -9,6 +9,6 @@ entries:
     name: cakestudio-chart
     type: application
     urls:
-    - https://github.com/hasan2001jk/Helm_Charts.git/cakestudio-chart-1.tgz
+    - https://hasan2001jk.github.io/Helm_Charts/cakestudio-chart-1.tgz
     version: "1"
 generated: "2024-02-28T14:08:36.083736761Z"
