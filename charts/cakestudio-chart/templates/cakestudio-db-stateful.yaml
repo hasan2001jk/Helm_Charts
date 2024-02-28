@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{.Values.db.metadata.name}}-statefulset
+spec:
+  replicas: {{.Values.db.spec.replicas}}
+  serviceName: {{.Values.db.spec.serviceName}}-service
+  selector:
+    matchLabels:
+      app: {{.Values.db.spec.selector.matchLabels}}
+  template:
+    metadata:
+      labels:
+        app: {{.Values.db.spec.selector.matchLabels}}
+    spec:
+      containers:
+      - name: {{.Values.db.containers.name}}
+        image: {{.Values.db.containers.image}}:{{.Values.db.containers.tag}}
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        ports:
+        - containerPort: {{.Values.db.containers.port}}
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{.Values.db.secret.name}}
+              key: spring_datasource_username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{.Values.db.secret.name}}
+              key: spring_datasource_password
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: {{.Values.db.configMap.name}}
+              key: postgres_db
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{.Values.db.volumeClaimTemplates.spec.storageClassName}}
+      resources:
+        requests:
+          storage: {{.Values.db.volumeClaimTemplates.spec.resources.requests.storage}}

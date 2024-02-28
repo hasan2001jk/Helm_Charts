@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.app.metadata.name}}-deployment
+spec:
+  replicas: {{.Values.app.spec.replicas}}
+  selector:
+    matchLabels:
+      app: {{.Values.app.spec.selector.matchLabels}}
+  template:
+    metadata:
+      name: {{.Values.app.spec.template.metadata.name}}-pod
+      labels:
+        app: {{.Values.app.spec.selector.matchLabels}}
+    spec:
+      containers:
+      - name: {{.Values.app.containers.name}}
+        image: {{.Values.app.containers.image}}:{{.Values.app.containers.tag}}
+        ports:
+        - containerPort: {{.Values.app.containers.port}}
+        env:
+          - name: SPRING_DATASOURCE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{.Values.app.configMap.name}}
+                key: spring_datasource_url
+          - name: SPRING_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{.Values.app.secret.name}}
+                key: spring_datasource_username
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{.Values.app.secret.name}}
+                key: spring_datasource_password
+          - name: SERVER_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: {{.Values.app.configMap.name}}
+                key: server_port
+          - name: SPRING_PROFILES_ACTIVE
+            valueFrom:
+              configMapKeyRef:
+                name: {{.Values.app.configMap.name}}
+                key: spring_profiles_active
+

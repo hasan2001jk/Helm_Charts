@@ -1,0 +1,110 @@
+# Default values for cakestudio-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+app:
+  metadata:
+    name: cake-studio                                #name for the application "{{.Values.app.metadata.name}}-deployment" has fixed ending for deployment
+  spec:
+    replicas: 1                                      # replicas of pods in deployment
+    selector:
+      matchLabels: cake-studio-app                   #label which starts "app:{{.Values.app.spec.selector.matchLabels}}"
+    template:
+      metadata:
+        name: cake-studio-app                        # name of the pod which ends with "{{.Values.app.spec.template.metadata.name}}-pod"
+  containers:
+    name: cake-studio-app                            # name of the container
+    image: khasanabdurakhmanov/khasanabdurakhmanov-repo                       # image of the application frontend - part
+    tag: app_v4                                      # tag of the image
+    port: 80                                         # Port which will be exposed for the container
+  configMap:
+    name: cake-studio-configmap                      # Reference to configMap name
+  secret:
+    name: cake-studio-secret                         # Reference to secret name
+
+
+db:
+  metadata:
+    name: cake-studio                                #name for the database "{{.Values.db.metadata.name}}-statefulset" has fixed ending for statefulset
+  spec:
+    replicas: 1                                      # replicas of pods in statefulset
+    serviceName: cake-studio-db                      # Reference to service name for database
+    selector:
+      matchLabels: cake-studio-db                    #label which starts "app:{{.Values.db.spec.selector.matchLabels}}"
+  containers:
+    name: cake-studio-db                             # name of the container
+    image: khasanabdurakhmanov/khasanabdurakhmanov-repo                       # image of the database backend - part
+    tag: db_v4                                       # tag of the image
+    port: 5432                                       # Port which will be exposed for the container
+  secret:
+    name: cake-studio-secret                         # Reference to secret name
+  configMap:
+    name: cake-studio-configmap                      # Reference to configMap name
+  volumeClaimTemplates:
+    spec:
+      storageClassName: local                        # Reference to storageClass name
+      resources:
+        requests:
+          storage: 5Gi                               # The capacity of storage will be taken from persistent volume
+
+service_app:
+  metadata:
+    name:  cake-studio-app                           # The name of service which ends with "{{.Values.service_app.metadata.name}}-service"    
+  spec:
+    type: NodePort                                   # Type of Service
+    selector: cake-studio-app                        # Selector label which match to "{{.Values.service_app.spec.selector}}" pods with the same label
+  port: 80                                           # Port which will be exposed for Service
+  targetPort: 80                                     # The target port which will point to the port of the application container
+  nodePort: 30000                                    # Node port which will be expose in any node in cluster
+
+
+service_db:
+  metadata:
+    name: cake-studio-db                             # The name of service which ends with "{{.Values.service_db.metadata.name}}-service" 
+  spec:
+    selector: cake-studio-db                         # Selector label which match to "{{.Values.service_db.spec.selector}}" pods with the same label
+  port: 5432                                         # Port which will be exposed for Service
+  targetPort: 5432                                   # The target port which will point to the port of the stateful database container
+
+
+
+persistentVolume:
+  metadata:
+    name: local-pv                                   # The name of the PersistentVolume resource
+  spec:
+    capacity:
+      storage: 10Gi                                  # The storage capacity which will be allocated in the specific node (Scroll down to value)
+    storageClassName: local                          # Reference to storageClass name
+    local:
+      path: /mnt                                    # The path which will be allocated in the filesystem of the node
+    nodeAffinity:
+      required:
+        value:
+        - k8sworker                                # Specific node in cluster we should specify the hostname of this node which will be used as a storage
+
+
+
+storageClass:
+  metadata:
+    name: local                                    # The name of the storageClass resource
+  volumeBindingMode: WaitForFirstConsumer          # The PV waits for an application to request storage (through a PVC) before actually creating storage space.
+
+
+configMap:
+  metadata:
+    name: cake-studio                              # The name of configMap which ends with "{{.Values.configMap.metadata.name}}-configmap"
+  data:
+    spring_datasource_url: jdbc:postgresql://cake-studio-db-service:5432/CakeStudio                           # {{ quote .Values.configMap.data.spring.datasource_url}} this JDBC URL provides all the necessary information for a Java application to connect to the CakeStudio database running on the cake-studio-db-service within your Kubernetes environment.
+    server_port: 80                                # {{ quote .Values.configMap.data.server_port}} exposing port on which the application will be listening
+    spring_profiles_active: development            # {{ quote .Values.configMap.data.spring_profiles_active}} profile which will be used as an active one
+    postgres_db: CakeStudio                        # {{ quote .Values.configMap.data.postgres_db}}  The name of the Database whithin the PostgreSQL
+
+secret:
+  metadata:
+    name: cake-studio                              # The name of secret which ends with "{{.Values.secret.metadata.name}}-secret"
+  type: Opaque                                     # The type of secret
+  data:
+    spring_datasource_username: dXNlcg==           # Username for connection to DB    
+    spring_datasource_password: dXNlcg==           # Password for connection to Db
+    spring_mail_username: Y2FrZXN0dWRpbzIwMjNAZ21haWwuY29t                    # The email address for sending letters in application  
+    spring_mail_password: YmpoYWlocGV3YWt3ZGNnbw==                            # The password for the email address 

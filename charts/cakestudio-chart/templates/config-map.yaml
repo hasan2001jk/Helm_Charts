@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.metadata.name }}-configmap
+data:
+  spring_datasource_url: {{ quote .Values.configMap.data.spring_datasource_url }}
+  server_port: {{ quote .Values.configMap.data.server_port }}
+  spring_profiles_active: {{ quote .Values.configMap.data.spring_profiles_active }}
+  postgres_db: {{ quote .Values.configMap.data.postgres_db }}
